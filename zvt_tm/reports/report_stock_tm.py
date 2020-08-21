@@ -6,7 +6,7 @@ from datetime import timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from zvt import init_log
 from zvt.contract import IntervalLevel
-from zvt.domain import Stock
+from zvt.domain import Stock, StockTradeDay, Stock1dKdata
 from zvt.factors.ma.ma_factor import ImprovedMaFactor
 from zvt.factors.target_selector import TargetSelector
 from zvt.utils.pd_utils import pd_is_not_null
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 sched = BackgroundScheduler()
 
 
-@sched.scheduled_job('cron', hour=8, minute=10)
+@sched.scheduled_job('cron', hour=19, minute=0, day_of_week='mon-fri')
 def report_tm():
     while True:
         error_count = 0
@@ -29,15 +29,18 @@ def report_tm():
 
         try:
             # 抓取k线数据
-            # Coin1dKdata.record_data()
+            StockTradeDay.record_data(provider='baostock', sleeping_time=2)
+            Stock1dKdata.record_data(provider='baostock', sleeping_time=2)
+
 
             target_date = now_pd_timestamp()
 
             # 计算
-            my_selector = TargetSelector(entity_schema=Coin, provider='ccxt',
-                                         start_timestamp='2020-01-01', end_timestamp=target_date)
+            my_selector = TargetSelector(entity_schema=Stock, provider='baostock',
+                                         start_timestamp='2020-05-01', end_timestamp=target_date)
             # add the factors
-            tm_factor = TMFactor(entity_schema=Coin, provider='ccxt', start_timestamp='2020-01-01',
+            tm_factor = TMFactor(entity_schema=Stock, provider='baostock',
+                                 start_timestamp='2020-05-01',
                                  end_timestamp=target_date)
 
             my_selector.add_filter_factor(tm_factor)
