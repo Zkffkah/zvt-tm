@@ -44,7 +44,7 @@ def report_tm():
 
             my_selector.run()
 
-            long_targets = get_turning_point(my_selector.open_long_df, target_date)
+            long_targets = my_selector.get_open_long_targets(timestamp=target_date)
 
             logger.info(long_targets)
 
@@ -58,17 +58,6 @@ def report_tm():
             if error_count == 10:
                 discord_informer.send_message(f'report_tm error',
                                               'report_tm error:{}'.format(e))
-
-
-def get_turning_point(df, timestamp):
-    if pd_is_not_null(df):
-        if timestamp in df.index:
-            df['difference'] = df.groupby('entity_id')['timestamp'].diff().fillna(0)
-            df = df[df['difference'] > timedelta(days=1)]
-            target_df = df.loc[[to_pd_timestamp(timestamp)], :]
-            return target_df['entity_id'].tolist()
-    return []
-
 
 if __name__ == '__main__':
     init_log('repot_crypto_tm.log')
