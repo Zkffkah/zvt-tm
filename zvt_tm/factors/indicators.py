@@ -24,6 +24,10 @@ def add_tm_ema_features(df, fn=26, sn=9, ohlcv_col=default_ohlcv_col, fillna=Fal
     df['ema_fast_close'] = ema1
     df['ema_slow_high'] = ema2.shift(3)
     df['ema_slow_low'] = ema3.shift(3)
+
+    df['tm_signal'] = cal_crossover_and_boundry_signal(df=df, fast_line='H_Close', base_line='ema_fast_close',
+                                                       top_line='ema_slow_high', bottom_line='ema_slow_low')
+
     return df
 
 
@@ -412,6 +416,48 @@ def cal_crossover_signal(df, fast_line, slow_line, result_col='signal', pos_sign
 
     return df[[result_col]]
 
+def cal_crossover_and_boundry_signal(df, fast_line, base_line, top_line, bottom_line, result_col='signal', pos_signal='b', neg_signal='s',
+                         none_signal='n'):
+    """
+    Calculate signal generated from the crossover of 4 lines
+    When fast line breakthrough base line and top line from the bottom, positive signal will be generated
+    When fast line breakthrough base line and bottom line from the top, negative signal will be generated
+
+    :param df: original dffame which contains a fast line and a slow line
+    :param fast_line: columnname of the fast line
+    :param base_line: columnname of the fast line
+    :param top_line: columnname of the top line
+    :param bottom_line: columnname of the bottom line
+    :param result_col: columnname of the result
+    :param pos_signal: the value of positive signal
+    :param neg_signal: the value of negative signal
+    :param none_signal: the value of none signal
+    :returns: series of the result column
+    :raises: none
+    """
+    df = df.copy()
+
+    # calculate the distance between fast and slow line
+    df['diff1'] = df[fast_line] - df[base_line]
+    df['diff_prev1'] = df['diff1'].shift(1)
+
+    df['diff2'] = df[fast_line] - df[top_line]
+    df['diff_prev2'] = df['diff2'].shift(1)
+
+    df['diff3'] = df[fast_line] - df[bottom_line]
+    df['diff_prev3'] = df['diff3'].shift(1)
+
+    # get signals from fast/slow lines cross over
+    df[result_col] = none_signal
+    pos_idx = df.query('(diff1 >= 0 and diff2 >= 0) and (diff_prev1 <= 0 or diff_prev2 <= 0)').index
+    neg_idx = df.query('(diff1 <= 0 and diff3 <= 0) and (diff_prev1 >= 0 or diff_prev2 >= 0)').index
+
+    # assign signal values
+    df[result_col] = none_signal
+    df.loc[pos_idx, result_col] = pos_signal
+    df.loc[neg_idx, result_col] = neg_signal
+
+    return df[[result_col]]
 
 # calculate signal that generated from trigering boundaries
 def cal_boundary_signal(df, upper_col, lower_col, upper_boundary, lower_boundary, result_col='signal', pos_signal='b',

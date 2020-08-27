@@ -35,9 +35,7 @@ class TMFactor(TechnicalFactor):
 
     def do_compute(self):
         super().do_compute()
-
-        s = (self.factor_df['H_Close'] > self.factor_df['ema_slow_high']) & (self.factor_df['H_Close'] > self.factor_df[
-            'ema_fast_close']) & (self.factor_df['H_Close'] > self.factor_df['cloud_top'])
+        s = (self.factor_df['tm_signal'] == 'b')
         self.result_df = s.to_frame(name='score')
 
 

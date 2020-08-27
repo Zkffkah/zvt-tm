@@ -29,12 +29,12 @@ class TMTransformer(Transformer):
         cost_time = time.time() - start_time
         self.logger.info('tm ema finished,cost_time:{}'.format(cost_time))
 
-        start_time = time.time()
-        input_df = add_ichimoku_features(input_df, ohlcv_col={'close': 'H_Close', 'open': 'H_Open', 'high': 'H_High',
-                                                              'low': 'H_Low',
-                                                              'volume': 'volume'})
-        cost_time = time.time() - start_time
-        self.logger.info('tm ichimoku finished,cost_time:{}'.format(cost_time))
+        # start_time = time.time()
+        # input_df = add_ichimoku_features(input_df, ohlcv_col={'close': 'H_Close', 'open': 'H_Open', 'high': 'H_High',
+        #                                                       'low': 'H_Low',
+        #                                                       'volume': 'volume'})
+        # cost_time = time.time() - start_time
+        # self.logger.info('tm ichimoku finished,cost_time:{}'.format(cost_time))
 
         print('transform out', input_df)
         return input_df
