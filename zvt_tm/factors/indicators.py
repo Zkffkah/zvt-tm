@@ -6,9 +6,9 @@ import pandas as pd
 default_ohlcv_col = {'close': 'close', 'open': 'open', 'high': 'high', 'low': 'low', 'volume': 'volume'}
 
 
-def add_tm_ema_features(df, fn=26, sn=9, ohlcv_col=default_ohlcv_col, fillna=False, adx_threshold=25):
+def add_tm_ema_features(input_df, fn=26, sn=9, ohlcv_col=default_ohlcv_col, fillna=False, adx_threshold=25):
     # copy dataframe
-    df = df.copy()
+    input_df = input_df.copy()
 
     # set column names
     # open = ohlcv_col['open']
@@ -16,19 +16,24 @@ def add_tm_ema_features(df, fn=26, sn=9, ohlcv_col=default_ohlcv_col, fillna=Fal
     # low = ohlcv_col['low']
     # close = ohlcv_col['close']
     # volume = ohlcv_col['volume']
+    def tm_lambda(df, fn, sn):
+        ema1 = em(series=df['H_Close'], periods=fn, fillna=fillna).mean()
+        ema2 = em(series=df['H_High'], periods=sn, fillna=fillna).mean().shift(3)
+        ema3 = em(series=df['H_Low'], periods=sn, fillna=fillna).mean().shift(3)
+        input_df.loc[df.index, 'ema_fast_close'] = ema1
+        input_df.loc[df.index, 'ema_slow_high'] = ema2
+        input_df.loc[df.index, 'ema_slow_low'] = ema3
+        signal_df = cal_crossover_and_boundry_signal(df=input_df.loc[df.index], fast_line='H_Close',
+                                                     result_col='tm_signal',
+                                                     base_line='ema_fast_close',
+                                                     top_line='ema_slow_high',
+                                                     bottom_line='ema_slow_low')
+        input_df.loc[df.index, 'tm_signal'] = signal_df['tm_signal']
 
-    # calculate trix
-    ema1 = em(series=df['H_Close'], periods=fn, fillna=fillna).mean()
-    ema2 = em(series=df['H_High'], periods=sn, fillna=fillna).mean()
-    ema3 = em(series=df['H_Low'], periods=sn, fillna=fillna).mean()
-    df['ema_fast_close'] = ema1
-    df['ema_slow_high'] = ema2.shift(3)
-    df['ema_slow_low'] = ema3.shift(3)
-
-    df['tm_signal'] = cal_crossover_and_boundry_signal(df=df, fast_line='H_Close', base_line='ema_fast_close',
-                                                       top_line='ema_slow_high', bottom_line='ema_slow_low')
-
-    return df
+    input_df.groupby(level=0).apply(
+        lambda x: tm_lambda(x, fn, sn)
+    )
+    return input_df
 
 
 # add heikin-ashi candlestick features
