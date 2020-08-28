@@ -4,7 +4,12 @@
 from zvt.contract.register import register_schema
 from zvt.domain.quotes import Stock1dKdata, Stock1wkKdata
 from zvt.domain.quotes.trade_day import StockTradeDay
+from zvt_ccxt import Coin
+from zvt_ccxt.domain.quotes.coin.coin_1d_kdata import Coin1dKdata
 
 register_schema(providers=['baostock'], db_name='stock_1d_kdata', schema_base=Stock1dKdata)
 register_schema(providers=['baostock'], db_name='stock_1wk_kdata', schema_base=Stock1wkKdata)
 register_schema(providers=['baostock'], db_name='trade_day', schema_base=StockTradeDay)
+
+register_schema(providers=['cryptocompare'], db_name='coin_1d_kdata', schema_base=Coin1dKdata)
+register_schema(providers=['cryptocompare'], db_name='coin', schema_base=Coin)
