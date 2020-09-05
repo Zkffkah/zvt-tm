@@ -19,18 +19,9 @@ def run():
         discord_informer = DiscordInformer()
 
         try:
-            COIN_EXCHANGES = ["binance", "huobipro"]
-            COIN_BASE = ["BTC", "ETH", "XRP", "BCH", "EOS", "LTC", "XLM", "ADA", "IOTA", "TRX", "NEO", "DASH", "XMR",
-                         "BNB", "ETC", "QTUM", "ONT"]
-            COIN_PAIRS = [("{}/{}".format(item, "USDT")) for item in COIN_BASE] + \
-                         [("{}/{}".format(item, "USD")) for item in COIN_BASE]
-
-            Coin.record_data()
-            Coin1dKdata.record_data()
-            # CoinTickKdata.record_data()
-            # CoinKdataRecorder(exchanges=COIN_EXCHANGES, codes=COIN_PAIRS, start_timestamp='2013-08-17',
-            #                   level=IntervalLevel.LEVEL_1DAY, real_time=True).run()
-
+            COIN_EXCHANGES = ["binance", "huobipro", "ftx"]
+            Coin.record_data(exchanges=COIN_EXCHANGES)
+            Coin1dKdata.record_data(exchanges=COIN_EXCHANGES)
             discord_informer.send_message('crypto runner finished', '')
             break
         except Exception as e:

@@ -19,8 +19,8 @@ def record_block():
         # email_action = EmailInformer()
 
         try:
-            Block.record_data(provider='sina')
-            BlockStock.record_data(provider='sina')
+            Block.record_data(provider='sina', sleeping_time=1)
+            BlockStock.record_data(provider='sina', sleeping_time=1)
 
             # email_action.send_message("5533061@qq.com", 'sina block finished', '')
             break
@@ -38,7 +38,7 @@ def record_money_flow():
         # email_action = EmailInformer()
 
         try:
-            BlockMoneyFlow.record_data(provider='sina')
+            BlockMoneyFlow.record_data(provider='sina',sleeping_time=1)
 
             # email_action.send_message("5533061@qq.com", 'sina money flow finished', '')
             break
@@ -114,6 +114,7 @@ if __name__ == '__main__':
 
     record_block()
     record_money_flow()
+    record_stock()
     record_dkdata()
     record_wkdata()
     sched.start()
