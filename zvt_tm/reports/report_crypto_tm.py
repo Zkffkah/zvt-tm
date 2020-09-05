@@ -40,7 +40,7 @@ def report_tm():
 
             my_selector.run()
 
-            long_targets = list(map(lambda x: x.replace('_', '.'), filter(lambda k: 'USDT' in k,
+            long_targets = list(map(lambda x: x.replace('_', '.'), filter(lambda k: ('USDT' in k) or ('PERP' in k),
                                                                           my_selector.get_open_long_targets(
                                                                               timestamp=target_date))))
 

@@ -42,12 +42,14 @@ def report_tm():
             else:
                 target_date = now_pd_timestamp()
 
+            start_date = target_date - timedelta(60)
+
             # 计算
             my_selector = TargetSelector(entity_schema=Stock, provider='joinquant',
-                                         start_timestamp='2020-05-01', end_timestamp=target_date)
+                                         start_timestamp=start_date, end_timestamp=target_date)
             # add the factors
             tm_factor = TMFactor(entity_schema=Stock, provider='joinquant',
-                                 start_timestamp='2020-05-01',
+                                 start_timestamp=start_date,
                                  end_timestamp=target_date)
 
             my_selector.add_filter_factor(tm_factor)
