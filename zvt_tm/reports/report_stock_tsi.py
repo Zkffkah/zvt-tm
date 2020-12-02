@@ -16,8 +16,9 @@ from zvt.utils.time_utils import now_pd_timestamp, to_pd_timestamp
 from zvt_ccxt import Coin
 
 from zvt_tm.factors.block_selector import BlockSelector
-from zvt_tm.factors.tm_factor import TMFactor
+from zvt_tm.factors.tsi_factor import TSIFactor
 from zvt_tm.informer.discord_informer import DiscordInformer
+from zvt_tm.informer.tonghuashun_informer import add_to_group
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ sched = BackgroundScheduler()
 
 
 @sched.scheduled_job('cron', hour=19, minute=0, day_of_week='mon-fri')
-def report_tm():
+def report_tsi():
     while True:
         error_count = 0
         discord_informer = DiscordInformer()
@@ -42,17 +43,17 @@ def report_tm():
             else:
                 target_date = now_pd_timestamp()
 
-            start_date = target_date - timedelta(60)
+            start_date = target_date - timedelta(360)
 
             # 计算
             my_selector = TargetSelector(entity_schema=Stock, provider='joinquant',
                                          start_timestamp=start_date, end_timestamp=target_date)
             # add the factors
-            tm_factor = TMFactor(entity_schema=Stock, provider='joinquant',
+            tsi_factor = TSIFactor(entity_schema=Stock, provider='joinquant',
                                  start_timestamp=start_date,
                                  end_timestamp=target_date)
 
-            my_selector.add_filter_factor(tm_factor)
+            my_selector.add_filter_factor(tsi_factor)
 
             my_selector.run()
 
@@ -79,60 +80,29 @@ def report_tm():
 
                 long_stocks = set(positive_df['entity_id'].tolist())
 
+
                 if long_stocks:
-                    # use block to filter
-                    block_selector = BlockSelector(start_timestamp='2020-01-01', long_threshold=0.8)
-                    block_selector.run()
-                    long_blocks = block_selector.get_open_long_targets(timestamp=target_date)
-                    if long_blocks:
-                        blocks = Block.query_data(provider='sina', entity_ids=long_blocks,
-                                                               return_type='domain')
+                    stocks = get_entities(provider='joinquant', entity_schema=Stock, entity_ids=long_stocks,
+                                          return_type='domain')
+                    for stock in stocks:
+                        add_to_group(stock.code, group_id='23')
+                    info = [f'{stock.name}({stock.code})' for stock in stocks]
+                    msg = msg + '盈利股:' + ' '.join(info) + '\n'
 
-                        info = [f'{block.name}({block.code})' for block in blocks]
-                        msg = ' '.join(info) + '\n'
-
-                        block_stocks = BlockStock.query_data(provider='sina',  filters=[
-                                                                                   BlockStock.stock_id.in_(long_stocks)],
-                                                                               entity_ids=long_blocks, return_type='domain')
-
-                        block_map_stocks = {}
-                        for block_stock in block_stocks:
-                            stocks = block_map_stocks.get(block_stock.name)
-                            if not stocks:
-                                stocks = []
-                                block_map_stocks[block_stock.name] = stocks
-                            stocks.append(f'{block_stock.stock_name}({block_stock.stock_code})')
-
-                        for block in block_map_stocks:
-                            stocks = block_map_stocks[block]
-                            stock_msg = ' '.join(stocks)
-                            msg = msg + f'{block}:\n' + stock_msg + '\n'
-
-            discord_informer.send_message(f'{target_date} TM选股结果 {msg}')
+            discord_informer.send_message(f'{target_date} TSI选股结果 {msg}')
 
             break
         except Exception as e:
-            logger.exception('report_tm error:{}'.format(e))
+            logger.exception('report_tsi error:{}'.format(e))
             time.sleep(60 * 3)
             error_count = error_count + 1
             if error_count == 10:
-                discord_informer.send_message(f'report_tm error',
-                                              'report_tm error:{}'.format(e))
-
-
-def get_turning_point(df, timestamp):
-    if pd_is_not_null(df):
-        if timestamp in df.index:
-            df['difference'] = df.groupby('entity_id')['timestamp'].diff().fillna(0)
-            df = df[df['difference'] > timedelta(days=1)]
-            target_df = df.loc[[to_pd_timestamp(timestamp)], :]
-            return target_df['entity_id'].tolist()
-    return []
-
+                discord_informer.send_message(f'report_tsi error',
+                                              'report_tsi error:{}'.format(e))
 
 if __name__ == '__main__':
-    init_log('repot_crypto_tm.log')
-    report_tm()
+    init_log('repot_crypto_tsi.log')
+    report_tsi()
 
     sched.start()
 

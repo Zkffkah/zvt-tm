@@ -2,6 +2,8 @@ import math
 
 import numpy as np
 import pandas as pd
+import pandas_ta
+from pandas_ta import ema
 
 default_ohlcv_col = {'close': 'close', 'open': 'open', 'high': 'high', 'low': 'low', 'volume': 'volume'}
 
@@ -35,6 +37,88 @@ def add_tm_ema_features(input_df, fn=26, sn=9, ohlcv_col=default_ohlcv_col, fill
     )
     return input_df
 
+
+# True strength index (TSI)
+#  """
+#     Formula
+#     -
+#     TSI = (Double Smoothed PC / Double Smoothed Absolute PC) x 100
+#     Double Smoothed PC
+#     ------------------
+#     PC = Current Price minus Prior Price
+#     First Smoothing = 25-period EMA of PC
+#     Second Smoothing = 13-period EMA of 25-period EMA of PC
+#     Double Smoothed Absolute PC
+#     ---------------------------
+#     Absolute Price Change |PC| = Absolute Value of Current Price minus Prior Price
+#     First Smoothing = 25-period EMA of |PC|
+#     Second Smoothing = 13-period EMA of 25-period EMA of |PC|
+#     """
+def add_tm_tsi_features(df, r=25, s=13, ema_period=13, ohlcv_col=default_ohlcv_col, fillna=False, cal_signal=True):
+    """
+    Calculate True strength index
+
+    :param df: original OHLCV dataframe
+    :param r: ma window size for high
+    :param s: ma window size for low
+    :param ohlcv_col: column name of Open/High/Low/Close/Volume
+    :param fillna: whether to fill na with 0
+    :param cal_signal: whether to calculate signal
+    :returns: dataframe with new features generated
+    """
+    # copy dataframe
+    df = df.copy()
+
+    # set column names
+    # open = ohlcv_col['open']
+    # high = ohlcv_col['high']
+    # low = ohlcv_col['low']
+    close = ohlcv_col['close']
+    # volume = ohlcv_col['volume']
+
+    # Calculate Result
+    diff = df[close].diff(1)
+    slow_ema = ema(close=diff, length=s)
+    fast_slow_ema = ema(close=slow_ema, length=r)
+
+    abs_diff = diff.abs()
+    abs_slow_ema = ema(close=abs_diff, length=s)
+    abs_fast_slow_ema = ema(close=abs_slow_ema, length=r)
+
+    tsi = 100 * fast_slow_ema / abs_fast_slow_ema
+    tsi_sig = em(series=tsi, periods=ema_period).mean()
+
+    # fill na values
+    if fillna:
+        tsi = tsi.replace([np.inf, -np.inf], np.nan).fillna(0)
+        tsi_sig = tsi_sig.replace([np.inf, -np.inf], np.nan).fillna(0)
+
+    # assign tsi to df
+    df['tsi'] = tsi
+    df['tsi_sig'] = tsi_sig
+
+    df['tsi_log'] = df['tsi'].apply(
+        lambda x: symmetric_logarithm(x)
+    )
+    df['tis_sig_log'] = df['tsi_sig'].apply(
+        lambda x: symmetric_logarithm(x)
+    )
+    # calculate signal
+    if cal_signal:
+        df['top_border'] = 0.1
+        df['bot_border'] = -0.1
+        df['tm_tsi_signal'] = cal_uturn_signal(df=df, fast_line='tsi_log', spread_line='tis_sig_log',
+                                               top_line='top_border', bottom_line='bot_border',
+                                               result_col='log_tsi_signal', pos_signal='b', neg_signal='s',
+                                               none_signal='n')
+
+    return df
+
+def symmetric_logarithm(arg,base=10,shift=1):
+    if arg >= 0:
+        return math.log(arg + shift, base) - math.log(shift, base)
+    else:
+        return -math.log(-arg+shift,base)+math.log(shift,base)
 
 # add heikin-ashi candlestick features
 def add_tm_heikin_ashi_features(input_df, ohlcv_col=default_ohlcv_col, replace_ohlc=False, dropna=False):
@@ -413,6 +497,50 @@ def cal_crossover_signal(df, fast_line, slow_line, result_col='signal', pos_sign
     df[result_col] = none_signal
     pos_idx = df.query('(diff >= 0 and diff_prev < 0) or (diff > 0 and diff_prev <= 0)').index
     neg_idx = df.query('(diff <= 0 and diff_prev > 0) or (diff < 0 and diff_prev >= 0)').index
+
+    # assign signal values
+    df[result_col] = none_signal
+    df.loc[pos_idx, result_col] = pos_signal
+    df.loc[neg_idx, result_col] = neg_signal
+
+    return df[[result_col]]
+
+def cal_uturn_signal(df, fast_line, spread_line, top_line, bottom_line, result_col='signal', pos_signal='b', neg_signal='s',
+                     none_signal='n'):
+    """
+    Calculate signal generated from the crossover of 2 lines
+    When fast line breakthrough top_line from the bottom and spread_line still under bottom line, positive signal will be generated
+    When fast line breakthrough bottom_line from the top, and spread_line still above top line,negative signal will be generated
+
+    :param df: original dffame which contains a fast line and a slow line
+    :param fast_line: columnname of the fast line
+    :param spread_line: columnname of the spread_line line
+    :param top_line: columnname of the spread_line line
+    :param bottom_line: columnname of the spread_line line
+    :param result_col: columnname of the result
+    :param pos_signal: the value of positive signal
+    :param neg_signal: the value of negative signal
+    :param none_signal: the value of none signal
+    :returns: series of the result column
+    :raises: none
+    """
+    df = df.copy()
+
+    # calculate the distance between fast and slow line
+    df['diff_fast_top'] = df[fast_line] - df[top_line]
+    df['diff_diff_fast_top_prev'] = df['diff_fast_top'].shift(1)
+    df['diff_spread_bot'] = df[spread_line] - df[bottom_line]
+
+    df['diff_fast_bot'] = df[fast_line] - df[bottom_line]
+    df['diff_fast_bot_prev'] = df['diff_fast_bot'].shift(1)
+    df['diff_spread_top'] = df[spread_line] - df[top_line]
+
+    # get signals from fast/slow lines cross over
+    df[result_col] = none_signal
+    # 上升信号
+    pos_idx = df.query('(diff_fast_bot >= 0 and diff_fast_bot_prev < 0 and diff_spread_top >= 0) or (diff_fast_bot > 0 and diff_fast_bot_prev <= 0 and diff_spread_top >= 0)').index
+    # 下降信号
+    neg_idx = df.query('(diff_fast_top <= 0 and diff_diff_fast_top_prev > 0 and diff_spread_bot <= 0) or (diff_fast_top < 0 and diff_diff_fast_top_prev >= 0 and diff_spread_bot <= 0)').index
 
     # assign signal values
     df[result_col] = none_signal
