@@ -2,7 +2,6 @@
 import pandas as pd
 from zvt.contract.api import df_to_db
 from baostock import login, logout, query_trade_dates
-import zvt_tm.domain as domain
 from zvt.contract.recorder import TimeSeriesDataRecorder
 from zvt.domain import StockTradeDay, Stock
 from zvt.utils.time_utils import to_time_str

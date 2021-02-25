@@ -23,7 +23,7 @@ def chrome_copy_header_to_dict(src):
     return header
 
 
-HEADER = chrome_copy_header_to_dict(zvt_config['tonghuashun_header'])
+HEADER = chrome_copy_header_to_dict(zvt_config['tradingview_header'])
 
 
 def parse_resp(resp: Response):
@@ -32,28 +32,34 @@ def parse_resp(resp: Response):
     # {'success': False, 'message': '参数有误', 'data': False}
     ret = resp.json()
     logger.info(f'ret:{ret}')
-    return ret['success'], ret.get('data')
-
-def add_to_group(code, entity_type='stock', group_id=None):
-    url = 'http://www.iwencai.com/unifiedwap/self-stock/plate/add'
-    resp = requests.post(url, headers=HEADER,
-                         data={'sn': group_id,
-                               'query_type': 'stock',
-                               'code': to_tonghuashun_code(code=code, entity_type=entity_type)})
-
-    ret, _ = parse_resp(resp)
     return ret
 
+def add_to_group(code, entity_type='stock', group_id=None):
+    url = f'https://cn.tradingview.com/api/v1/symbols_list/custom/{group_id}/append/'
+    resp = requests.post(url, headers=HEADER,
+                         json=[to_tradingview_code(code=code, entity_type=entity_type)])
 
-def to_tonghuashun_code(code, entity_type='stock'):
+    ret = parse_resp(resp)
+    return ret
+
+def add_list_to_group(codeList, entity_type='stock', group_id=None):
+    url = f'https://cn.tradingview.com/api/v1/symbols_list/custom/{group_id}/append/'
+    data = list(map(lambda x: to_tradingview_code(code=x, entity_type=entity_type), codeList))
+    resp = requests.post(url, headers=HEADER,
+                         json=data)
+
+    ret = parse_resp(resp)
+    return ret
+
+def to_tradingview_code(code, entity_type='stock'):
     if entity_type == 'stock':
         # 上海
         if code >= '333333':
-            return f'{code}.SH'
+            return f'SSE:{code}'
         else:
-            return f'{code}.SZ'
+            return f'SZSE:{code}'
 
-__all__ = ['add_to_group', 'to_tonghuashun_code']
+__all__ = ['add_to_group', 'to_tradingview_code']
 
 if __name__ == '__main__':
     # groups = get_groups()
@@ -61,5 +67,6 @@ if __name__ == '__main__':
     #     del_group(group_id=groups[-2]['id'])
     #
     # create_group('tmp')
-    add_to_group('002229', group_id='23')
+    # add_to_group('002229', group_id='22081672')
+    add_list_to_group(['002230','000231'], group_id='22081672')
     # del_group('tmp')

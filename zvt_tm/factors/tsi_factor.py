@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
+import logging
+from datetime import timedelta, datetime
+from itertools import accumulate
 from typing import List, Union
 
 import pandas as pd
 from zvt.contract import IntervalLevel, EntityMixin
+from zvt.contract.api import get_entities
 from zvt.domain import Stock
-from zvt.factors import Accumulator
-from zvt.factors.factor import Transformer
+import operator
+from zvt.utils.pd_utils import index_df
+from zvt.contract.factor import Accumulator
+from zvt.contract.factor import Transformer
 from zvt.factors.technical_factor import TechnicalFactor
 from zvt.utils.time_utils import now_pd_timestamp
-from zvt_ccxt import Coin
 
-from zvt_tm.factors.tm_transformer import TMTransformer
 from zvt_tm.factors.tsi_transformer import TSITransformer
+from zvt_tm.informer.tradingview_informer import add_list_to_group
 
+logger = logging.getLogger(__name__)
 
 class TSIFactor(TechnicalFactor):
     def __init__(self, entity_schema: EntityMixin = Stock, provider: str = None, entity_provider: str = None,
@@ -43,8 +49,34 @@ class TSIFactor(TechnicalFactor):
 
 if __name__ == '__main__':
     print('start')
-
+    target_date = now_pd_timestamp() - timedelta(1)
+    start_date = target_date - timedelta(720)
     factor = TSIFactor(entity_schema=Stock, provider='joinquant', level=IntervalLevel.LEVEL_1DAY,
-                        end_timestamp=now_pd_timestamp(), need_persist=False,
-                      )
-    print(factor.result_df)
+                        start_timestamp=start_date, need_persist=False)
+    df = factor.result_df
+    musts = []
+    if len(df.columns) > 1:
+        s = df.agg("and", axis="columns")
+        s.name = 'score'
+        musts.append(s.to_frame(name='score'))
+    else:
+        df.columns = ['score']
+        musts.append(df)
+
+    filter_result = list(accumulate(musts, func=operator.__and__))[-1]
+    long_result = df[df.score == True]
+    long_result = long_result.reset_index()
+    long_result = index_df(long_result)
+    long_result = long_result.sort_values(by=['score', 'entity_id'])
+    long_result = long_result[long_result.timestamp > target_date - timedelta(8)]
+    longdf = factor.factor_df[factor.factor_df['entity_id'].isin(long_result['entity_id'].tolist())]
+    good_stocks = set(long_result['entity_id'].tolist())
+    stocks = get_entities(provider='joinquant', entity_schema=Stock, entity_ids=good_stocks,
+                                          return_type='domain')
+    codeList = []
+    for stock in stocks:
+        codeList.append(stock.code)
+    add_list_to_group(codeList, group_id=22081672)
+    info = [f'{stock.name}({stock.code})' for stock in stocks]
+    msg = '选股:' + ' '.join(info) + '\n'
+    logger.info(msg)

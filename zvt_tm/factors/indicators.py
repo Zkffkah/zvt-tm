@@ -2,7 +2,6 @@ import math
 
 import numpy as np
 import pandas as pd
-import pandas_ta
 from pandas_ta import ema
 
 default_ohlcv_col = {'close': 'close', 'open': 'open', 'high': 'high', 'low': 'low', 'volume': 'volume'}
@@ -78,14 +77,14 @@ def add_tm_tsi_features(df, r=25, s=13, ema_period=13, ohlcv_col=default_ohlcv_c
 
     # Calculate Result
     diff = df[close].diff(1)
-    slow_ema = ema(close=diff, length=s)
-    fast_slow_ema = ema(close=slow_ema, length=r)
+    smoothed_pc = ema(close=diff, length=r)
+    double_smoothed_pc = ema(close=smoothed_pc, length=s)
 
     abs_diff = diff.abs()
-    abs_slow_ema = ema(close=abs_diff, length=s)
-    abs_fast_slow_ema = ema(close=abs_slow_ema, length=r)
+    smoothed_abs_pc = ema(close=abs_diff, length=r)
+    double_smoothed_abs_pc = ema(close=smoothed_abs_pc, length=s)
 
-    tsi = 100 * fast_slow_ema / abs_fast_slow_ema
+    tsi = 100 * double_smoothed_pc / double_smoothed_abs_pc
     tsi_sig = em(series=tsi, periods=ema_period).mean()
 
     # fill na values

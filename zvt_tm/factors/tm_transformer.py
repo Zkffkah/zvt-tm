@@ -1,5 +1,5 @@
 import pandas as pd
-from zvt.factors import Transformer, DataReader, time
+from zvt.contract.factor import Transformer, DataReader, time
 from zvt_ccxt import Coin1dKdata, Coin
 
 from zvt_tm.factors.indicators import add_tm_heikin_ashi_features, add_adx_features, add_tm_ema_features, \

@@ -4,8 +4,8 @@ from typing import List, Union
 import pandas as pd
 from zvt.contract import IntervalLevel, EntityMixin
 from zvt.domain import Stock
-from zvt.factors import Accumulator
-from zvt.factors.factor import Transformer
+from zvt.contract.factor import Accumulator
+from zvt.contract.factor import Transformer
 from zvt.factors.technical_factor import TechnicalFactor
 from zvt.utils.time_utils import now_pd_timestamp
 from zvt_ccxt import Coin

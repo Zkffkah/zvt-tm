@@ -1,10 +1,11 @@
+import time
+from datetime import timedelta
+
 import pandas as pd
 from zvt.domain import Stock1dKdata, Stock
-from zvt.factors import Transformer, DataReader, time
-from zvt_ccxt import Coin1dKdata, Coin
+from zvt.contract.factor import Transformer, DataReader
 
-from zvt_tm.factors.indicators import add_tm_heikin_ashi_features, add_adx_features, add_tm_ema_features, \
-    add_ichimoku_features, add_tm_tsi_features
+from zvt_tm.factors.indicators import add_tm_tsi_features
 
 
 class TSITransformer(Transformer):
@@ -19,7 +20,6 @@ class TSITransformer(Transformer):
         cost_time = time.time() - start_time
         self.logger.info('tm tsi finished,cost_time:{}'.format(cost_time))
 
-        print('transform out', input_df)
         return input_df
 
 

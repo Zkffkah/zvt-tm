@@ -3,12 +3,14 @@
 import baostock as bs
 import pandas as pd
 
-from zvt.api import get_kdata, AdjustType
-from zvt.api.quote import generate_kdata_id, get_kdata_schema, StockKdataCommon, Stock
+from zvt.contract import AdjustType
+from zvt.api.quote import get_kdata
+from zvt.domain.quotes import StockKdataCommon
+from zvt.domain import Stock
+from zvt.api.quote import generate_kdata_id, get_kdata_schema
 from zvt.contract import IntervalLevel
 from zvt.contract.api import df_to_db
 from zvt.contract.recorder import FixedCycleDataRecorder
-from zvt.domain import register_schema, declarative_base
 
 from zvt_tm.domain import Stock1dKdata
 from zvt_tm.recorders.baostock.common import to_bs_trading_level, to_bs_entity_id

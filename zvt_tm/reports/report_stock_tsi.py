@@ -8,8 +8,6 @@ from zvt import init_log
 from zvt.contract import IntervalLevel
 from zvt.contract.api import get_entities
 from zvt.domain import Stock, StockTradeDay, Stock1dKdata, StockValuation, Block, BlockStock
-from zvt.factors.ma.ma_factor import ImprovedMaFactor
-from zvt.factors.money_flow_factor import BlockMoneyFlowFactor
 from zvt.factors.target_selector import TargetSelector
 from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import now_pd_timestamp, to_pd_timestamp
