@@ -11,7 +11,7 @@ from zvt.domain import Stock, StockTradeDay, Stock1dKdata, StockValuation, Block
 from zvt.factors.target_selector import TargetSelector
 from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import now_pd_timestamp, to_pd_timestamp
-from zvt_ccxt import Coin
+from zvt_crypto import Coin
 
 from zvt_tm.factors.block_selector import BlockSelector
 from zvt_tm.factors.tm_factor import TMFactor

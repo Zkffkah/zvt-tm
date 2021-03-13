@@ -8,7 +8,7 @@ from zvt.contract.factor import Accumulator
 from zvt.contract.factor import Transformer
 from zvt.factors.technical_factor import TechnicalFactor
 from zvt.utils.time_utils import now_pd_timestamp
-from zvt_ccxt import Coin
+from zvt_crypto import Coin
 
 from zvt_tm.factors.tm_transformer import TMTransformer
 

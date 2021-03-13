@@ -4,7 +4,9 @@ import time
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from zvt import init_log
-from zvt_ccxt.domain import *
+from zvt.contract.api import get_entities
+
+from zvt_crypto.domain import *
 
 from zvt_tm.informer.discord_informer import DiscordInformer
 
@@ -16,19 +18,18 @@ sched = BackgroundScheduler()
 @sched.scheduled_job('cron', hour=8, minute=10)
 def run():
     while True:
-        discord_informer = DiscordInformer()
 
         try:
-            COIN_EXCHANGES = ["binance", "huobipro", "ftx"]
+            COIN_EXCHANGES = ["binance", "huobipro"]
             Coin.record_data(exchanges=COIN_EXCHANGES)
-            Coin1dKdata.record_data(exchanges=COIN_EXCHANGES)
-            discord_informer.send_message('crypto runner finished', '')
-            break
-        except Exception as e:
-            msg = f'crypto runner error:{e}'
-            logger.exception(msg)
+            items = get_entities(entity_type='coin', provider='ccxt', exchanges=COIN_EXCHANGES)
+            entity_ids = [eid for eid in items['entity_id'].to_list() if "USDT" in eid]
+            Coin1dKdata.record_data(provider='ccxt', entity_ids= entity_ids, sleeping_time=0.5)
 
-            discord_informer.send_message('crypto runner error', msg)
+            logger.log('crypto data runner finish')
+
+        except Exception as e:
+            logger.exception(e)
             time.sleep(60)
 
 

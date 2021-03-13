@@ -37,27 +37,20 @@ def parse_resp(resp: Response):
 def add_to_group(code, entity_type='stock', group_id=None):
     url = f'https://cn.tradingview.com/api/v1/symbols_list/custom/{group_id}/append/'
     resp = requests.post(url, headers=HEADER,
-                         json=[to_tradingview_code(code=code, entity_type=entity_type)])
+                         json=[code])
 
     ret = parse_resp(resp)
     return ret
 
 def add_list_to_group(codeList, entity_type='stock', group_id=None):
     url = f'https://cn.tradingview.com/api/v1/symbols_list/custom/{group_id}/append/'
-    data = list(map(lambda x: to_tradingview_code(code=x, entity_type=entity_type), codeList))
     resp = requests.post(url, headers=HEADER,
-                         json=data)
+                         json=codeList)
 
     ret = parse_resp(resp)
     return ret
 
-def to_tradingview_code(code, entity_type='stock'):
-    if entity_type == 'stock':
-        # 上海
-        if code >= '333333':
-            return f'SSE:{code}'
-        else:
-            return f'SZSE:{code}'
+
 
 __all__ = ['add_to_group', 'to_tradingview_code']
 

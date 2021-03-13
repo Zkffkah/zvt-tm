@@ -6,7 +6,7 @@ from datetime import timedelta, date
 from apscheduler.schedulers.background import BackgroundScheduler
 from zvt import init_log
 from zvt.factors.target_selector import TargetSelector
-from zvt_ccxt import Coin
+from zvt_crypto import Coin
 
 from zvt_tm.factors.tm_factor import TMFactor
 from zvt_tm.informer.discord_informer import DiscordInformer

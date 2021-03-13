@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 import logging
-from datetime import timedelta, datetime
+import operator
+from datetime import timedelta
 from itertools import accumulate
 from typing import List, Union
 
 import pandas as pd
 from zvt.contract import IntervalLevel, EntityMixin
 from zvt.contract.api import get_entities
-from zvt.domain import Stock
-import operator
-from zvt.utils.pd_utils import index_df
 from zvt.contract.factor import Accumulator
 from zvt.contract.factor import Transformer
+from zvt.domain import Stock
 from zvt.factors.technical_factor import TechnicalFactor
+from zvt.utils.pd_utils import index_df
 from zvt.utils.time_utils import now_pd_timestamp
 
 from zvt_tm.factors.tsi_transformer import TSITransformer
@@ -46,6 +46,13 @@ class TSIFactor(TechnicalFactor):
         s = (self.factor_df['tm_tsi_signal'] == 'b')
         self.result_df = s.to_frame(name='score')
 
+def to_tradingview_code(code):
+    # 上海
+    if code >= '333333':
+        return f'SSE:{code}'
+    else:
+        return f'SZSE:{code}'
+
 
 if __name__ == '__main__':
     print('start')
@@ -75,7 +82,7 @@ if __name__ == '__main__':
                                           return_type='domain')
     codeList = []
     for stock in stocks:
-        codeList.append(stock.code)
+        codeList.append(to_tradingview_code(stock.code))
     add_list_to_group(codeList, group_id=22081672)
     info = [f'{stock.name}({stock.code})' for stock in stocks]
     msg = '选股:' + ' '.join(info) + '\n'
