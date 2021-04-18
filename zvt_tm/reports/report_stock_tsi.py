@@ -7,7 +7,7 @@ from itertools import accumulate
 from apscheduler.schedulers.background import BackgroundScheduler
 from zvt.contract import IntervalLevel
 from zvt.contract.api import get_entities
-from zvt.domain import Stock
+from zvt.domain import Stock, StockValuation
 from zvt.utils.pd_utils import index_df
 from zvt.utils.time_utils import now_pd_timestamp
 
@@ -48,9 +48,21 @@ if __name__ == '__main__':
     long_result = long_result.reset_index()
     long_result = index_df(long_result)
     long_result = long_result.sort_values(by=['score', 'entity_id'])
-    long_result = long_result[long_result.timestamp > target_date - timedelta(8)]
+    long_result = long_result[long_result.timestamp > target_date - timedelta(7)]
     longdf = factor.factor_df[factor.factor_df['entity_id'].isin(long_result['entity_id'].tolist())]
     good_stocks = set(long_result['entity_id'].tolist())
+
+    # 过滤亏损股
+    # check StockValuation data
+    pe_date = target_date - timedelta(10)
+    if StockValuation.query_data(start_timestamp=pe_date, limit=1, return_type='domain'):
+        positive_df = StockValuation.query_data(provider='joinquant', entity_ids=good_stocks,
+                                                start_timestamp=pe_date,
+                                                filters=[StockValuation.pe > 0],
+                                                columns=['entity_id'])
+
+        good_stocks = set(positive_df['entity_id'].tolist())
+
     stocks = get_entities(provider='joinquant', entity_schema=Stock, entity_ids=good_stocks,
                           return_type='domain')
     codeList = []
