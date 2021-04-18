@@ -42,7 +42,7 @@ class CoinKdataRecorder(FixedCycleDataRecorder):
         self.data_schema = get_kdata_schema(entity_type='coin', level=level)
         self.ccxt_trading_level = level
 
-        super().__init__('stock', exchanges, entity_ids, codes, day_data, batch_size, force_update, sleeping_time,
+        super().__init__('coin', exchanges, entity_ids, codes, day_data, batch_size, force_update, sleeping_time,
                          default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
                          close_minute, level, kdata_use_begin_time, one_day_trading_minutes)
 
@@ -95,7 +95,7 @@ __all__ = ["CoinKdataRecorder"]
 
 if __name__ == '__main__':
     # CoinKdataRecorder(exchanges=['binance']).run()
-    CoinKdataRecorder(exchanges=['huobipro']).run()
+    CoinKdataRecorder(exchanges=['huobipro'],entity_ids=['coin_huobipro_1INCH/USDT'], sleeping_time=0.5).run()
     # CoinKdataRecorder(exchanges=['ftx']).run()
 
     # CoinKdataRecorder(exchanges=['ftx'], codes=['BTC-MOVE-0831']).run()
