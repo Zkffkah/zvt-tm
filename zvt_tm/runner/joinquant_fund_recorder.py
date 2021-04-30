@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
 import time
+from operator import or_
 
 from apscheduler.schedulers.background import BackgroundScheduler
-
 from zvt import init_log
-from zvt.domain import Fund, FundStock, Stock1wkHfqKdata, StockValuation
+from zvt.contract.api import get_entities
+from zvt.domain import Fund, FundStock, Stock1wkHfqKdata, StockValuation, Stock
 from zvt.informer.informer import EmailInformer
+from zvt.utils import now_pd_timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,11 @@ def record_valuation():
         email_action = EmailInformer()
 
         try:
-            StockValuation.record_data(provider='joinquant', sleeping_time=0, day_data=True)
+            items = get_entities(entity_type='stock', provider='joinquant',
+                                 filters=[or_(Stock.end_date.is_(None), Stock.end_date > now_pd_timestamp())])
+            entity_ids = items['entity_id'].to_list()
+            # StockValuation.record_data(provider='joinquant', entity_ids=entity_ids[1:50], sleeping_time=0, day_data=True)
+            StockValuation.record_data(provider='joinquant', entity_ids=entity_ids, sleeping_time=0, day_data=True)
 
             # email_action.send_message("5533061@qq.com", 'joinquant record valuation finished', '')
             break

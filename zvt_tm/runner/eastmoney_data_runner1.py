@@ -3,8 +3,8 @@ import logging
 import time
 
 from apscheduler.schedulers.background import BackgroundScheduler
-
 from zvt import init_log
+from zvt.contract.api import get_entities
 from zvt.domain import *
 from zvt.informer.informer import EmailInformer
 
@@ -21,12 +21,14 @@ def run():
         email_action = EmailInformer()
 
         try:
-            Stock.record_data(provider='eastmoney')
-            StockDetail.record_data(provider='eastmoney')
-            FinanceFactor.record_data(provider='eastmoney')
-            BalanceSheet.record_data(provider='eastmoney')
-            IncomeStatement.record_data(provider='eastmoney')
-            CashFlowStatement.record_data(provider='eastmoney')
+            items = get_entities(entity_type='stock', provider='joinquant')
+            entity_ids = items['entity_id'].to_list()
+            Stock.record_data(provider='eastmoney', sleeping_time=1)
+            StockDetail.record_data(provider='eastmoney', sleeping_time=1)
+            FinanceFactor.record_data(provider='eastmoney', sleeping_time=1)
+            BalanceSheet.record_data(provider='eastmoney', sleeping_time=1)
+            IncomeStatement.record_data(provider='eastmoney', sleeping_time=1)
+            CashFlowStatement.record_data(provider='eastmoney', sleeping_time=1)
 
             # email_action.send_message("5533061@qq.com", 'eastmoney runner1 finished', '')
             break
