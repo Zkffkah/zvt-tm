@@ -1,5 +1,5 @@
-zvt == 0.9.3
 baostock
 TA-Lib >= 0.4.19
-apscheduler >= 3.6.3
 ccxt
+-r ./zvt/requirements.txt
+-e ./zvt/
