@@ -1,5 +1,6 @@
 baostock
 TA-Lib >= 0.4.19
+pandas_ta
 ccxt
 -r ./zvt/requirements.txt
 -e ./zvt/

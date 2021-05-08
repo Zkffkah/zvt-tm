@@ -4,21 +4,18 @@ import operator
 from datetime import timedelta
 from itertools import accumulate
 
-from apscheduler.schedulers.background import BackgroundScheduler
 from zvt.api import get_top_performance_entities, get_recent_report_date
 from zvt.contract import IntervalLevel
 from zvt.contract.api import get_entities, get_entity_ids
 from zvt.domain import Stock, StockValuation, FinanceFactor, Stock1dHfqKdata, FundStock
 from zvt.utils.pd_utils import index_df
 from zvt.utils.time_utils import now_pd_timestamp, next_date
-from tabulate import tabulate
 
 from zvt_tm.factors.tsi_factor import TSIFactor
 from zvt_tm.informer.tradingview_informer import add_list_to_group
 
 logger = logging.getLogger(__name__)
 
-sched = BackgroundScheduler()
 
 
 def to_tradingview_code(code):
