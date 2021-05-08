@@ -4,7 +4,6 @@ import operator
 from datetime import timedelta
 from itertools import accumulate
 
-from apscheduler.schedulers.background import BackgroundScheduler
 from zvt import init_log
 from zvt.contract import IntervalLevel
 from zvt.contract.api import get_entities
@@ -16,8 +15,6 @@ from zvt_tm.factors.tsi_factor import TSIFactor
 from zvt_tm.informer.tradingview_informer import add_list_to_group
 
 logger = logging.getLogger(__name__)
-
-sched = BackgroundScheduler()
 
 
 def to_tradingview_code(code, exchange):
@@ -33,7 +30,7 @@ if __name__ == '__main__':
     print('start')
     target_date = now_pd_timestamp() - timedelta(1)
     start_date = target_date - timedelta(720)
-    COIN_EXCHANGES = ["huobipro"]
+    COIN_EXCHANGES = ["binance"]
     items = get_entities(entity_type='coin', provider='ccxt', exchanges=COIN_EXCHANGES)
     entity_ids = [eid for eid in items['entity_id'].to_list() if "USDT" in eid]
 
@@ -62,10 +59,7 @@ if __name__ == '__main__':
     codeList = []
     for coin in coins:
         codeList.append(to_tradingview_code(coin.code, coin.exchange))
-    info = [f'{coin.name}({coin.code})' for coin in coins]
+    info = [f'{coin}' for coin in codeList]
     msg = '选币:' + ' '.join(info) + '\n'
     logger.info(msg)
-    add_list_to_group(codeList, group_id=19580865, entity_type='coin')
-    sched.start()
-
-    sched._thread.join()
+    # add_list_to_group(codeList, group_id=19580865, entity_type='coin')

@@ -2,7 +2,6 @@
 import logging
 import time
 
-from apscheduler.schedulers.background import BackgroundScheduler
 from zvt import init_log
 from zvt.contract.api import get_entities, del_data
 
@@ -12,13 +11,12 @@ from zvt_tm.informer.discord_informer import DiscordInformer
 
 logger = logging.getLogger(__name__)
 
-sched = BackgroundScheduler()
 
 
 if __name__ == '__main__':
     init_log('crypto_data_runner.log')
     try:
-        COIN_EXCHANGES = ["huobipro"]
+        COIN_EXCHANGES = ["huobipro","binance"]
         del_data(data_schema=Coin, provider='ccxt')
         Coin.record_data(exchanges=COIN_EXCHANGES)
         items = get_entities(entity_type='coin', provider='ccxt', exchanges=COIN_EXCHANGES)
