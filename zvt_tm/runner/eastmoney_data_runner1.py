@@ -15,12 +15,18 @@ def run():
             entity_ids = items['entity_id'].to_list()
             # InstitutionalInvestorHolder.record_data(provider='eastmoney', sleeping_time=1)
             # HolderTrading.record_data(provider='eastmoney', sleeping_time=1)
-            TopTenHolder.record_data(provider='eastmoney', sleeping_time=1)
-            TopTenTradableHolder.record_data(provider='eastmoney', sleeping_time=1)
-            FinanceFactor.record_data(provider='eastmoney', sleeping_time=1)
-            BalanceSheet.record_data(provider='eastmoney', sleeping_time=1)
-            IncomeStatement.record_data(provider='eastmoney', sleeping_time=1)
-            CashFlowStatement.record_data(provider='eastmoney', sleeping_time=1)
+            # TopTenHolder.record_data(provider='eastmoney', sleeping_time=1)
+            # TopTenTradableHolder.record_data(provider='eastmoney', sleeping_time=1)
+            # FinanceFactor.record_data(provider='eastmoney', sleeping_time=1)
+            # BalanceSheet.record_data(provider='eastmoney', sleeping_time=1)
+            # IncomeStatement.record_data(provider='eastmoney', sleeping_time=1)
+            # CashFlowStatement.record_data(provider='eastmoney', sleeping_time=1)
+
+            # StockInstitutionalInvestorHolder.record_data(provider='em', sleeping_time=2)
+            StockActorSummary.record_data(entity_ids=entity_ids[3330:], provider='em', sleeping_time=1)
+            StockInstitutionalInvestorHolder.record_data(provider='em', sleeping_time=1)
+            StockTopTenHolder.record_data(provider='em', sleeping_time=1)
+            StockTopTenFreeHolder.record_data(provider='em', sleeping_time=1)
 
             break
         except Exception as e:

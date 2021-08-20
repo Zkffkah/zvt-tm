@@ -26,7 +26,6 @@ def record_stock():
 
 def record_kdata():
     while True:
-
         try:
             # items = get_entities(entity_type='stock', provider='joinquant')
             # entity_ids = items['entity_id'].to_list()
@@ -38,8 +37,8 @@ def record_kdata():
             # 日线前复权和后复权数据
             # Stock1dKdata.record_data(provider='joinquant', sleeping_time=0)
             Stock1dHfqKdata.record_data(provider='joinquant', sleeping_time=0, day_data=True)
-            StockMoneyFlow.record_data(provider='joinquant', sleeping_time=0, day_data=True)
-            IndexMoneyFlow.record_data(provider='joinquant', sleeping_time=0, day_data=True)
+            # StockMoneyFlow.record_data(provider='joinquant', sleeping_time=0, day_data=True)
+            # IndexMoneyFlow.record_data(provider='joinquant', sleeping_time=0, day_data=True)
             break
         except Exception as e:
             msg = f'joinquant record kdata:{e}'
