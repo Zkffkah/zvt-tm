@@ -3,10 +3,10 @@ import logging
 import operator
 from datetime import timedelta
 from itertools import accumulate
-from typing import List, Union
+from typing import List, Union, Type
 
 import pandas as pd
-from zvt.contract import IntervalLevel, EntityMixin
+from zvt.contract import IntervalLevel, TradableEntity, AdjustType
 from zvt.contract.api import get_entities
 from zvt.contract.factor import Accumulator
 from zvt.contract.factor import Transformer
@@ -21,9 +21,9 @@ from zvt_tm.informer.tradingview_informer import add_list_to_group
 logger = logging.getLogger(__name__)
 
 class TSIFactor(TechnicalFactor):
-    def __init__(self, entity_schema: EntityMixin = Stock, provider: str = None, entity_provider: str = None,
+    def __init__(self, entity_schema: Type[TradableEntity] = Stock, provider: str = None, entity_provider: str = None,
                  entity_ids: List[str] = None, exchanges: List[str] = None, codes: List[str] = None,
-                 the_timestamp: Union[str, pd.Timestamp] = None, start_timestamp: Union[str, pd.Timestamp] = None,
+                start_timestamp: Union[str, pd.Timestamp] = None,
                  end_timestamp: Union[str, pd.Timestamp] = None,
                  columns: List = ['id', 'entity_id', 'timestamp', 'level', 'open', 'close', 'high', 'low', 'volume',
                                   'turnover'],
@@ -31,14 +31,19 @@ class TSIFactor(TechnicalFactor):
                  level: Union[str, IntervalLevel] = IntervalLevel.LEVEL_1DAY, category_field: str = 'entity_id',
                  time_field: str = 'timestamp', computing_window: int = None, keep_all_timestamp: bool = False,
                  fill_method: str = 'ffill', effective_number: int = None,
-                 accumulator: Accumulator = None, need_persist: bool = False, dry_run: bool = False,
-                 ) -> None:
+                 only_compute_factor: bool = False,
+                 need_persist: bool = False,
+                 factor_name: str = None,
+                 clear_state: bool = False,
+                 only_load_factor: bool = False,
+                 adjust_type: Union[AdjustType, str] = None,
+                 windows=None) -> None:
         transformer: Transformer = TSITransformer()
 
-        super().__init__(entity_schema, provider, entity_provider, entity_ids, exchanges, codes, the_timestamp,
-                         start_timestamp, end_timestamp, columns, filters, order, limit, level, category_field,
-                         time_field, computing_window, keep_all_timestamp, fill_method, effective_number, transformer,
-                         accumulator, need_persist, dry_run)
+        super().__init__(entity_schema, provider, entity_provider, entity_ids, exchanges, codes, start_timestamp,
+                         end_timestamp, columns, filters, order, limit, level, category_field, time_field,
+                         computing_window, keep_all_timestamp, fill_method, effective_number, transformer, None,
+                         need_persist, only_compute_factor, factor_name, clear_state, only_load_factor, adjust_type)
 
     def do_compute(self):
         super().do_compute()

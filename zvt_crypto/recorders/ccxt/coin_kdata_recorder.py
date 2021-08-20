@@ -26,25 +26,23 @@ class CoinKdataRecorder(FixedCycleDataRecorder):
                  entity_ids=None,
                  codes=None,
                  day_data=False,
-                 batch_size=10,
                  force_update=True,
                  sleeping_time=1,
-                 default_size=2000,
                  real_time=False,
                  fix_duplicate_way='ignore',
                  start_timestamp=None,
                  end_timestamp=None,
                  level=IntervalLevel.LEVEL_1DAY,
                  kdata_use_begin_time=True,
-                 close_hour=None,
-                 close_minute=None,
+                 entity_filters=None,
                  one_day_trading_minutes=24 * 60) -> None:
         self.data_schema = get_kdata_schema(entity_type='coin', level=level)
         self.ccxt_trading_level = level
 
-        super().__init__('coin', exchanges, entity_ids, codes, day_data, batch_size, force_update, sleeping_time,
-                         default_size, real_time, fix_duplicate_way, start_timestamp, end_timestamp, close_hour,
-                         close_minute, level, kdata_use_begin_time, one_day_trading_minutes)
+        super().__init__(force_update=force_update, sleeping_time=sleeping_time, exchanges=exchanges, entity_ids=entity_ids, codes=codes, day_data=day_data,
+                 entity_filters=entity_filters, ignore_failed=True, real_time=real_time, fix_duplicate_way=fix_duplicate_way,
+                 start_timestamp=start_timestamp, end_timestamp=end_timestamp, level=level, kdata_use_begin_time=kdata_use_begin_time,
+                 one_day_trading_minutes=one_day_trading_minutes)
 
     def generate_domain_id(self, entity, original_data):
         return generate_kdata_id(entity_id=entity.id, timestamp=original_data['timestamp'], level=self.level)
