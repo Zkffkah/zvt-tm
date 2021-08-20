@@ -28,8 +28,9 @@ def to_tradingview_code(code, exchange):
 if __name__ == '__main__':
     init_log('repot_crypto_tsi.log')
     print('start')
+    start_from_last_n_day_num = 320
     target_date = now_pd_timestamp() - timedelta(1)
-    start_date = target_date - timedelta(720)
+    start_date = target_date - timedelta(start_from_last_n_day_num)
     COIN_EXCHANGES = ["binance"]
     items = get_entities(entity_type='coin', provider='ccxt', exchanges=COIN_EXCHANGES)
     entity_ids = [eid for eid in items['entity_id'].to_list() if "USDT" in eid]
@@ -46,12 +47,13 @@ if __name__ == '__main__':
         df.columns = ['score']
         musts.append(df)
 
+    signal_in_last_n_day_num = 42
     filter_result = list(accumulate(musts, func=operator.__and__))[-1]
     long_result = df[df.score == True]
     long_result = long_result.reset_index()
     long_result = index_df(long_result)
     long_result = long_result.sort_values(by=['score', 'entity_id'])
-    long_result = long_result[long_result.timestamp > target_date - timedelta(8)]
+    long_result = long_result[long_result.timestamp > target_date - timedelta(signal_in_last_n_day_num)]
     longdf = factor.factor_df[factor.factor_df['entity_id'].isin(long_result['entity_id'].tolist())]
     good_coins = set(long_result['entity_id'].tolist())
     coins = get_entities(provider='ccxt', entity_schema=Coin, entity_ids=good_coins,

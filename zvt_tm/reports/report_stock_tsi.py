@@ -5,9 +5,9 @@ from datetime import timedelta
 from itertools import accumulate
 
 from zvt.api import get_top_performance_entities, get_recent_report_date
-from zvt.contract import IntervalLevel
+from zvt.contract import IntervalLevel, ActorType
 from zvt.contract.api import get_entities, get_entity_ids
-from zvt.domain import Stock, StockValuation, FinanceFactor, Stock1dHfqKdata, FundStock
+from zvt.domain import Stock, Stock1dHfqKdata, FundStock, StockActorSummary, StockTradeDay
 from zvt.utils.pd_utils import index_df
 from zvt.utils.time_utils import now_pd_timestamp, next_date
 
@@ -33,32 +33,49 @@ if __name__ == '__main__':
                                                              return_type='domain')
     current_timestamp = latest_day[0].timestamp
 
-    # 基金持股大于3%
+    # 基金持股
+    fund_ratio_nums = 0.01
     report_date = get_recent_report_date(current_timestamp, 1)
-    fund_cap_df = FundStock.query_data(filters=[FundStock.report_date >= report_date, FundStock.timestamp <= current_timestamp, FundStock.proportion >= 0.03],
-                                       columns=['stock_id', 'market_cap', 'proportion'])
-    top_holding_stocks = fund_cap_df['stock_id'].tolist()
+    fund_cap_df = StockActorSummary.query_data(order=StockActorSummary.timestamp.desc(),
+                                           filters=[
+                                               StockActorSummary.report_date >= report_date,
+                                               StockActorSummary.actor_type == ActorType.raised_fund.value,
+                                               StockActorSummary.holding_ratio >= fund_ratio_nums],
+                                            columns=['entity_id', 'holding_ratio', 'actor_type'],
+                                            )
 
-    # 至少上市一年
+
+    # fund_cap_df = FundStock.query_data(filters=[FundStock.report_date >= report_date, FundStock.timestamp <= current_timestamp, FundStock.proportion >= 0.01],
+    #                                    columns=['stock_id', 'market_cap', 'proportion'])
+    top_holding_stocks = fund_cap_df['entity_id'].tolist()
+
+    # 至少上市
+    least_start_day_nums = 60
     filters = None
-    pre_year = next_date(current_timestamp, -365)
-    stocks = get_entity_ids(provider='joinquant', entity_schema=Stock, filters=[Stock.timestamp <= pre_year])
+    pre_date = next_date(current_timestamp, -least_start_day_nums)
+    stocks = get_entity_ids(provider='joinquant', entity_schema=Stock, filters=[Stock.timestamp <= pre_date])
     filters = [Stock1dHfqKdata.entity_id.in_(stocks)]
 
     # 任一rps 大于90
     top_rps_stocks = []
+    rps_rank_limit = 1000
     periods = [50, 120, 250]
     for period in periods:
         start = next_date(current_timestamp, -period)
         updf, _ = get_top_performance_entities(start_timestamp=start, filters=filters, pct=1, show_name=True)
-        top_rps_stocks.extend(updf.iloc[:600].index.tolist())
+        top_rps_stocks.extend(updf.iloc[:rps_rank_limit].index.tolist())
 
 
     top_stocks = list(set(top_holding_stocks) & set(top_rps_stocks))
 
-    target_date = now_pd_timestamp() - timedelta(1)
-    start_date = target_date - timedelta(420)
-    factor = TSIFactor(entity_schema=Stock, provider='joinquant', level=IntervalLevel.LEVEL_1DAY,entity_ids=top_stocks,
+
+    start_day_nums = 420
+    if latest_day:
+        target_date = latest_day[0].timestamp
+    else:
+        target_date = now_pd_timestamp()
+    start_date = target_date - timedelta(start_day_nums)
+    factor = TSIFactor(entity_schema=Stock, provider='joinquant', level= IntervalLevel.LEVEL_1DAY,entity_ids=top_stocks,
                        start_timestamp=start_date, need_persist=False)
     df = factor.result_df
     musts = []
@@ -70,12 +87,13 @@ if __name__ == '__main__':
         df.columns = ['score']
         musts.append(df)
 
+    signal_in_last_days_num = 7
     filter_result = list(accumulate(musts, func=operator.__and__))[-1]
     long_result = df[df.score == True]
     long_result = long_result.reset_index()
     long_result = index_df(long_result)
     long_result = long_result.sort_values(by=['score', 'entity_id'])
-    long_result = long_result[long_result.timestamp > target_date - timedelta(7)]
+    long_result = long_result[long_result.timestamp > target_date - timedelta(signal_in_last_days_num)]
     longdf = factor.factor_df[factor.factor_df['entity_id'].isin(long_result['entity_id'].tolist())]
     good_stocks = set(long_result['entity_id'].tolist())
 
