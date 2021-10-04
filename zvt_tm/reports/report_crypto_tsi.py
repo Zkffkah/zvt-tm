@@ -10,7 +10,7 @@ from zvt.contract.api import get_entities
 from zvt.utils.pd_utils import index_df
 from zvt.utils.time_utils import now_pd_timestamp
 
-from zvt_crypto import Coin
+from zvt_coin.domain import Coin
 from zvt_tm.factors.tsi_factor import TSIFactor
 from zvt_tm.informer.tradingview_informer import add_list_to_group
 
@@ -47,7 +47,7 @@ if __name__ == '__main__':
         df.columns = ['score']
         musts.append(df)
 
-    signal_in_last_n_day_num = 42
+    signal_in_last_n_day_num = 14
     filter_result = list(accumulate(musts, func=operator.__and__))[-1]
     long_result = df[df.score == True]
     long_result = long_result.reset_index()

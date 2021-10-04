@@ -1,3 +1,6 @@
 [submodule "zvt"]
 	path = zvt
 	url = https://github.com/zvtvz/zvt.git
+[submodule "zvt_coin"]
+	path = zvt_coin
+	url = https://github.com/zvtvz/zvt_coin.git

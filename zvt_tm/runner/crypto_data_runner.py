@@ -4,9 +4,9 @@ import time
 
 from zvt import init_log
 from zvt.contract.api import get_entities, del_data
+from zvt_coin import *
 
-from zvt_crypto.domain import *
-
+from zvt_coin.domain import *
 from zvt_tm.informer.discord_informer import DiscordInformer
 
 logger = logging.getLogger(__name__)
