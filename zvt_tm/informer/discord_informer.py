@@ -2,13 +2,14 @@ import time
 
 import requests
 from zvt import zvt_config
+from zvt_tm import zvt_tm_config
 
 
 class DiscordInformer(object):
 
     def __init__(self):
         self.session = requests.Session()
-        self.webhook_url = zvt_config['discord_webhook_url']
+        self.webhook_url = zvt_tm_config['discord_webhook_url']
 
     def send_message(self, content, **kwargs):
         if self.webhook_url:

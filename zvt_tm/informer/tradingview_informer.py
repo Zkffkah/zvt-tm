@@ -4,6 +4,7 @@ from http.client import HTTPConnection
 import requests
 from requests import Response
 from zvt import zvt_config
+from zvt_tm import zvt_tm_config
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ def chrome_copy_header_to_dict(src):
     return header
 
 
-HEADER = chrome_copy_header_to_dict(zvt_config['tradingview_header'])
+HEADER = chrome_copy_header_to_dict(zvt_tm_config['tradingview_header'])
 
 
 def parse_resp(resp: Response):
