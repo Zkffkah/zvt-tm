@@ -3,4 +3,4 @@
 	url = https://github.com/zvtvz/zvt.git
 [submodule "zvt_coin"]
 	path = zvt_coin
-	url = https://github.com/zvtvz/zvt_coin.git
+	url = https://github.com/lowwor/zvt_coin.git
